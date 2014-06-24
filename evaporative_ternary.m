@@ -1,32 +1,31 @@
-function [A,B,C] = ternary_flory()
+function [A,B,C] = evaporative_ternary()
 tic
-[A,B,C] = construct_binodal(10);
+[A,B,C] = construct_binodal(50);
+figure
 ternplot(A,C,B,'or')
 ternlabel('CHCl3','PS','P3HT')
 toc
 end
 
-function [A,B,C] = construct_binodal(vertices)
+function [A,B,C] = construct_binodal(steps)
 
-% this function takes an integer 'vertices', divides a ternary diagram's
-% axes into that many segments, creates test solutions with compositions at
-% the intersection of lines drawn from those vertices, and equilibrates
-% those starting solutions to create a binodal curve. spinodal to come
-% soon.
+%% Construct Binodal
+% this function takes an integer 'steps', and performs a gradient search
+% for equilibrium phase compositions starting from solutions along a line that follows solvent evaporation
 
 % A, B, and C are equal sized vectors of the compositions of each component
 % to be fed to the ternplot function.
 
-ntests = populate_triangle(vertices); %create n starting solutions evenly distributed across the ternary diagram
-[n,m] = size(ntests); %get n because we're going to create a tie-line for each test point
-%disp(ntests)
+ntests = populate_triangle(steps); %create n starting solutions that follow a line from a dilute solution to a pure even mixture of two polymers
 
-balls = 10000; %100000 balls per bag
+balls = 50000; %50000 balls per bag
 test = 1; %count how many test points we've used
 i = 1; %count how many points on the binodal we've marked
 ABC = zeros(1,3); %ABC will store A, B and C as columns in a tests x 3 matrix
+figure
+hold on
 
-while test<=n
+while test<=steps
     
     [B1,B2] = fill_bags(ntests(test,:),balls); %this will create two phases (bags) with n balls specified by the compositions of each ntest
     %disp(B1)
@@ -35,16 +34,20 @@ while test<=n
     [B1e,B2e] = equilibrate_bags(B1,B2); %run the equilibration algorithm
     %disp(B1e)
     %disp(B2e)
+    VF = balls_to_vols(B1);
     
     if B1==B1e
         %disp('point was stable')
         %disp(test)
+        plot(VF(1),VF(2),'ob',VF(1),VF(3),'oc')
         test = test+1; %if the point is already equilibrated, keep going
         
     else
         ABC(i,:) = balls_to_vols(B1e); %else mark two points in A, B, and C, one from each phase
+        plot(VF(1),ABC(i,2),'or',VF(1),ABC(i,3),'om')
         i = i+1;
         ABC(i,:) = balls_to_vols(B2e);
+        plot(VF(1),ABC(i,2),'or',VF(1),ABC(i,3),'om')
         i = i+1;
         %disp(i)
         %disp(test)
@@ -59,6 +62,10 @@ while test<=n
     end
 
 end
+
+xlabel('overall vol frac solvent')
+ylabel('vol frac P3HT in each phase')
+hold off
 
 A = ABC(:,1);
 B = ABC(:,2);
@@ -129,6 +136,8 @@ end
 
 function out = Gibbs_calc(B1,B2,comp,from)
 
+%% Gibbs Calc
+
 % Gibbs calc takes two 1x3 vectors that are the bags, changes the ball
 % counts to reflect which *component (scalar, 1 2 or 3) is being moved *from what bag (scalar, 1 or 2),
 % calculates the energy of the new conformation, and returns this as a 1x7
@@ -154,15 +163,29 @@ end
 VF1 = balls_to_vols(B1new);
 VF2 = balls_to_vols(B2new);
 
-Energy1 = B1new(1)*log(VF1(1)) + B1new(2)*log(VF1(2)) + B1new(3)*log(VF1(3)) + g12()*B1new(1)*VF1(2) + g13()*B1new(1)*VF1(3) + g23()*B1new(2)*VF1(3);
-Energy2 = B2new(1)*log(VF2(1)) + B2new(2)*log(VF2(2)) + B2new(3)*log(VF2(3)) + g12()*B2new(1)*VF2(2) + g13()*B2new(1)*VF2(3) + g23()*B2new(2)*VF2(3);
-Energy = Energy1+Energy2;
+%Energy1 = B1new(1)*log(VF1(1)) + B1new(2)*log(VF1(2)) + B1new(3)*log(VF1(3)) + g12()*B1new(1)*VF1(2) + g13()*B1new(1)*VF1(3) + g23()*B1new(2)*VF1(3);
+%Energy2 = B2new(1)*log(VF2(1)) + B2new(2)*log(VF2(2)) + B2new(3)*log(VF2(3)) + g12()*B2new(1)*VF2(2) + g13()*B2new(1)*VF2(3) + g23()*B2new(2)*VF2(3);
+%Energy = Energy1+Energy2;
 %disp(Energy)
+
 % actual formula: ?G/RT = n1*log(vf1) + n2*log(vf2) + n3*log(vf3) +
-% g12(u2)*n1*vf2 + g13(vf3)*n1*vf3 + g23(vf3)*n2*vf3
-% in this case we are using the ball counts as number of moles. Dividing by
-% total number of moles would yield molar gibbs but we're just going to add
+% g12(u2)*n1*vf2 + g13(vf3)*n1*vf3 + g23(vf3)*n2vf3
+% in this case we are using the ball counts as number of moles. Dividing
+% by total number of moles would yield molar gibbs but we're just going to add
 % it all up because I'm lazy
+
+R = 8.314;
+T = 295;
+MV = generate_molar_volumes();
+Energy1 = R*T*(B1new(1)*log(VF1(1)) + B1new(2)*log(VF1(2)) + B1new(3)*log(VF1(3)) + (g12()*VF1(1)*VF1(2) + g13()*VF1(1)*VF1(3) + g23()*VF1(2)*VF1(3))*(MV(1)*B1new(1)+MV(2)*B1new(2)+MV(3)*B1new(3)));
+Energy2 = R*T*(B2new(1)*log(VF2(1)) + B2new(2)*log(VF2(2)) + B2new(3)*log(VF2(3)) + (g12()*VF2(1)*VF2(2) + g13()*VF2(1)*VF2(3) + g23()*VF2(2)*VF2(3))*(MV(1)*B2new(1)+MV(2)*B2new(2)+MV(3)*B2new(3)));
+Energy = Energy1 + Energy2;
+
+% new formula, Prausnitz:
+% G = RT*(n1*log(vf1) + n2*log(vf2) + n3*log(vf3) + (X12vf1vf2 + X13vf1vf3
+% + X23vf2vf3)*(m1n1 + m2n2 + m3n3))
+% m's are molar volume ratios, where m_solvent = 1 (see
+% generate_molar_volumes)
 
 out = [B1new, B2new, Energy];
 
@@ -186,11 +209,13 @@ VF(3) = 1 - VF(1) - VF(2);
 end
 
 function out = g12()
-out = 0.99;
+out = Xij('CHCl3','P3HT',295);
+%out = 0.99;
 end
 
 function out = g13()
-out = 0.39;
+out = Xij('CHCl3','PS',295);
+%out = 0.39;
 end
 
 function out = g23()
@@ -233,33 +258,23 @@ function out = generate_molar_volumes()
 out = [1 119 1635];
 end
 
-function out = populate_triangle(vertices)
+function out = populate_triangle(steps)
 
-%this takes a number of vertices and outputs an nx3 matrix of compositions
-%which are volume fractions
+%% Populate Triangle
+%this takes a number of steps and outputs an nx3 matrix of compositions
+%which are volume fractions along a line of solvent evaporation
 
-ntests=0; %define how many starting solution concentrations we will use. vertices are how much we will segment each side of the ternary diagram
-for i = 1:vertices
-    ntests=ntests+i;
-end
+out = zeros(steps,3);
 
-out = zeros(ntests,3);
+pol_vol_fracs = [.0087 .00952]; % vol. frac. P3HT / PS based on 10 mg/mL each
+solv_frac = 1 - pol_vol_fracs(1) - pol_vol_fracs(2);
 
-A = linspace(0.1,0.9,vertices);
-B = linspace(0.1,0.9,vertices);
-C = linspace(0.1,0.9,vertices);
+solv_line = linspace(0,solv_frac,steps)';
+out(:,1) = solv_line;
 
-i = 0; %this will count up every time we start a new line
-col = 1; %this will count up every time we make a point
-
-while col <= ntests
-    for j = 1:(vertices-i)
-        out(col,1) = A(j);
-        out(col,2) = B(i+1);
-        out(col,3) = 1-out(col,1)-out(col,2);
-        col = col+1;
-    end
-    i = i+1;
+for i = 1:steps
+    out(i,3) = (1-out(i,1))/(1+pol_vol_fracs(1)/pol_vol_fracs(2));
+    out(i,2) = 1 - out(i,1) - out(i,3);
 end
 
 end 
