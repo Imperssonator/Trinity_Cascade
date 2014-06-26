@@ -27,7 +27,7 @@ hold on
 
 while test<=steps
     
-    [B1,B2] = fill_bags(ntests(test,:),balls); %this will create two phases (bags) with n balls specified by the compositions of each ntest
+    [B1,B2] = fill_bags(ntests(test,:),balls) %this will create two phases (bags) with n balls specified by the compositions of each ntest
     %disp(B1)
     %disp(B2)
     
@@ -40,7 +40,7 @@ while test<=steps
         %disp('point was stable')
         %disp(test)
         plot(VF(1),VF(2),'ob',VF(1),VF(3),'oc')
-        test = test+1; %if the point is already equilibrated, keep going
+        test = test+1 %if the point is already equilibrated, keep going
         
     else
         ABC(i,:) = balls_to_vols(B1e); %else mark two points in A, B, and C, one from each phase
@@ -58,7 +58,7 @@ while test<=steps
         %disp(B2e)
         %disp(balls_to_vols(B2e))
         %disp('__________')
-        test = test+1;
+        test = test+1
     end
 
 end
@@ -175,11 +175,12 @@ VF2 = balls_to_vols(B2new);
 % it all up because I'm lazy
 
 R = 8.314;
-T = 295;
+T = 273;
 MV = generate_molar_volumes();
-Energy1 = R*T*(B1new(1)*log(VF1(1)) + B1new(2)*log(VF1(2)) + B1new(3)*log(VF1(3)) + (g12()*VF1(1)*VF1(2) + g13()*VF1(1)*VF1(3) + g23()*VF1(2)*VF1(3))*(MV(1)*B1new(1)+MV(2)*B1new(2)+MV(3)*B1new(3)));
-Energy2 = R*T*(B2new(1)*log(VF2(1)) + B2new(2)*log(VF2(2)) + B2new(3)*log(VF2(3)) + (g12()*VF2(1)*VF2(2) + g13()*VF2(1)*VF2(3) + g23()*VF2(2)*VF2(3))*(MV(1)*B2new(1)+MV(2)*B2new(2)+MV(3)*B2new(3)));
+Energy1 = (B1new(1)*log(VF1(1)) + B1new(2)*log(VF1(2)) + B1new(3)*log(VF1(3)) + (g12()*VF1(1)*VF1(2) + g13()*VF1(1)*VF1(3) + g23()*VF1(2)*VF1(3))*(MV(1)*B1new(1)+MV(2)*B1new(2)+MV(3)*B1new(3)));
+Energy2 = (B2new(1)*log(VF2(1)) + B2new(2)*log(VF2(2)) + B2new(3)*log(VF2(3)) + (g12()*VF2(1)*VF2(2) + g13()*VF2(1)*VF2(3) + g23()*VF2(2)*VF2(3))*(MV(1)*B2new(1)+MV(2)*B2new(2)+MV(3)*B2new(3)));
 Energy = Energy1 + Energy2;
+%disp(Energy)
 
 % new formula, Prausnitz:
 % G = RT*(n1*log(vf1) + n2*log(vf2) + n3*log(vf3) + (X12vf1vf2 + X13vf1vf3
@@ -209,17 +210,20 @@ VF(3) = 1 - VF(1) - VF(2);
 end
 
 function out = g12()
-out = Xij('CHCl3','P3HT',295);
+%out = Xij('CHCl3','P3HT',295);
 %out = 0.99;
+out = 0.1;
 end
 
 function out = g13()
-out = Xij('CHCl3','PS',295);
+%out = Xij('CHCl3','PS',295);
 %out = 0.39;
+out = 0.16;
 end
 
 function out = g23()
-out = 0.48;
+%out = 0.48;
+out = 0.004;
 end
 
 function [B1,B2] = fill_bags(volfracs,balls)
@@ -255,7 +259,8 @@ end
 
 function out = generate_molar_volumes()
 % 3 component vector of relative molar volume values
-out = [1 119 1635];
+%out = [1 119 1635]; %Mincheol's system
+out = [1 1000 1000];
 end
 
 function out = populate_triangle(steps)
@@ -266,10 +271,11 @@ function out = populate_triangle(steps)
 
 out = zeros(steps,3);
 
-pol_vol_fracs = [.0087 .00952]; % vol. frac. P3HT / PS based on 10 mg/mL each
+%pol_vol_fracs = [.0087 .00952]; % vol. frac. P3HT / PS based on 10 mg/mL each
+pol_vol_fracs = [.005 .005];
 solv_frac = 1 - pol_vol_fracs(1) - pol_vol_fracs(2);
 
-solv_line = linspace(0,solv_frac,steps)';
+solv_line = linspace(0.01,solv_frac,steps)'; %can't start at 0 otherwise Energy will take log(0)
 out(:,1) = solv_line;
 
 for i = 1:steps
