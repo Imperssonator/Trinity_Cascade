@@ -1,4 +1,4 @@
-function [A,B,C] = evaporative_ternary()
+function [A,B,C] = gradient_phase_walk(DOP,start_comp)
 tic
 [A,B,C] = construct_binodal(50);
 figure
@@ -18,7 +18,6 @@ function [A,B,C] = construct_binodal(steps)
 
 ntests = populate_triangle(steps); %create n starting solutions that follow a line from a dilute solution to a pure even mixture of two polymers
 
-balls = 50000; %50000 balls per bag
 test = 1; %count how many test points we've used
 i = 1; %count how many points on the binodal we've marked
 ABC = zeros(1,3); %ABC will store A, B and C as columns in a tests x 3 matrix
@@ -222,7 +221,7 @@ out = 0.39;
 end
 
 function out = g23()
-out = 0.29;
+out = 0.48;
 %out = 0.004;
 end
 
@@ -274,7 +273,7 @@ out = zeros(steps,3);
 %pol_vol_fracs = [.0087 .00952]; % vol. frac. P3HT / PS based on 10 mg/mL each
 %pol_vol_fracs = [.005 .005];
 M = Mincheol();
-trial = 2;
+trial = 4;
 pol_vol_fracs = M(trial,3:4);
 solv_frac = 1 - pol_vol_fracs(1) - pol_vol_fracs(2);
 

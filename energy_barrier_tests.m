@@ -1,4 +1,4 @@
-function out = phase_walk(components,DOP,start_comp,final_comp,steps,Temps)
+function out = energy_barrier_tests(components,DOP,start_comp,final_comp,steps,Temps)
 
 %% Phase Walk
 % This function tracks the thermodynamic driving force and equilibrium
@@ -75,8 +75,8 @@ function out = run_tests(Walk)
 
 % first we equilibrate the first test solution (the most dilute)
 
-for i = 70 %1:length(Walk)
-    if i==1 | Walk(i-1,5:7,1) == [0 0 0]
+for i = 1:length(Walk)
+    if i==1 || not(any(Walk(i-1,5:7,1)))
         Walk = single_eqm(Walk,i);
     else
         Walk = guided_eqm(Walk,i);
@@ -189,7 +189,7 @@ while index ~= 1
         end
     end
     
-    disp(GRAD)
+    %disp(GRAD)
     [lowest_E, index] = min(GRAD(:,7)); %this will output the lowest energy value and its index
     
     if index == 1
@@ -334,12 +334,13 @@ function out = mols_to_balls(MF,basis)
 %% Mols to Balls
 % take mol fraction vector and the component that is the basis and spit out
 % a vector of ball counts with 100 for the basis component
+base_count = 10;
 
 for i = 1:3
     if i == basis
-        out(i) = 100;
+        out(i) = base_count;
     else
-        out(i) = round(MF(i)/MF(basis)*100);
+        out(i) = round(MF(i)/MF(basis)*base_count);
     end
 end
 end
