@@ -1,4 +1,4 @@
-function [A,B,C] = evaporative_ternary()
+function [A,B,C] = Smart_Cascade()
 tic
 [A,B,C] = construct_binodal(50);
 figure
@@ -31,7 +31,7 @@ while test<=steps
     %disp(B1)
     %disp(B2)
     
-    [B1e,B2e] = equilibrate_bags(B1,B2); %run the equilibration algorithm
+    [B1e,B2e] = equilibrate_bags(B1,B2); %run the equilibration algorithm to determine the binodal points for that test solution
     %disp(B1e)
     %disp(B2e)
     VF = balls_to_vols(B1);
@@ -49,15 +49,6 @@ while test<=steps
         ABC(i,:) = balls_to_vols(B2e);
         plot(VF(1),ABC(i,2),'or',VF(1),ABC(i,3),'om')
         i = i+1;
-        %disp(i)
-        %disp(test)
-        %disp(B1)
-        %disp(B1e)
-        %disp(balls_to_vols(B1e))
-        %disp(B2)
-        %disp(B2e)
-        %disp(balls_to_vols(B2e))
-        %disp('__________')
         test = test+1;
     end
 
@@ -74,6 +65,7 @@ C = ABC(:,3);
 end
 
 function [B1e,B2e] = equilibrate_bags(B1,B2)
+%% Equilibrate Bags
 
 %equilibrate bags takes two 1x3 vectors of integer #s of balls in two bags,
 %and moves balls between those bags until the overall energy of the system
@@ -96,49 +88,97 @@ B2e = Eq_bags(4:6);
 end
 
 function out = iterative_equilibrator(GRAD)
+%% Iterative Equilibrator
 
-% iterative equilibrator takes a 7x7 GRAD matrix, described below, takes
-% the starting composition (first row), generates the six different
-% possibilities if a ball were transferred from one bag to the other,
-% calculates their energies, and then passes a new 7x7 GRAD matrix to
-% itself with the lowest energy compositions as the new start row. If the
-% start row is the lowest energy composition, it is returned as 'out' (a
-% 1x7 vector)
-
+% input: 7x7 [GRAD] of the following format:
 % [<balls of A in bag 1>... B1B B1C B2A B2B B2C <?G of this composition>]
-% first row is the original
-% leave all zeros if a direction is impossible
+% first row is the original test composition
+% leave all 1E6's if a direction is impossible
+
+% output: 1x7 top row of [GRAD] when the best move is no move
+% iteration strategy: check if a previous iteration chose a best move and
+% first try to repeat that move. If it is a good move, make it and iterate on.
+% If that move is no longer a good move, go back and check all six possible
+% ball moves to choose a new direction
 
 index = 0;
-plotpt = 1;
-% figure
-% hold on
+iter = 0;
+best_move = 0; % can take any value from 1 to 7
 
-while index ~= 1
-    
-    for i = 1:3
-        if GRAD(1,i)>1 %if there are any balls of i in B1,
-            GRAD(2*i,:) = Gibbs_calc(GRAD(1,1:3),GRAD(1,4:6),i,1); %find the energy of moving an i from bag 1
+while best_move ~= 1
+    %iter=iter+1;
+    if best_move
+        [GRAD,best_move]=make_best_move(GRAD,best_move);
+        if best_move == 1 % i.e. if no move is the best move,
+            [GRAD,best_move]=make_new_move(GRAD);
+            if best_move == 1 % if best move is STILL no move,
+                out = GRAD(1,:);
+            end
         end
-        if GRAD(1,i+3)>1 %if there are any i in B2,
-            GRAD(2*i+1,:) = Gibbs_calc(GRAD(1,1:3),GRAD(1,4:6),i,2); %find energy of moving i from bag 2
-        end
-    end
-    
-    [lowest_E, index] = min(GRAD(:,7)); %this will output the lowest energy value and its index
-%     if 215<=plotpt && plotpt<=225
-%         disp(index)
-%     end
-    
-    if index == 1
-        out = GRAD(1,:);
     else
-        GRAD = [GRAD(index,:);zeros(6,7)+1E6]; % remake the matrix with the lowest energy as the new starting point
+        [GRAD,best_move]=make_new_move(GRAD);
+        if best_move == 1 % if no best move and no move at all,
+            out = GRAD(1,:);
+        end
     end
-%     plot(plotpt,lowest_E,'ob')
-%     plotpt=plotpt+1;
+end
+
+end
+
+function [GRAD,best_move] = make_best_move(oldGRAD,move)
+%% Make best move
+%take a 6x7 [oldGRAD] and make 'move' (scalar, 2-7), then decide if that move
+%is the best move, i.e. best_move will be scalar, 1 OR 'move'
+
+MOVES = [0 0;...
+         1 1;...
+         1 2;...
+         2 1;...
+         2 2;...
+         3 1;...
+         3 2];
+comp = MOVES(move,1); %the ball we move
+from = MOVES(move,2); %the bag we move it from
+GRAD = [oldGRAD(1,:); zeros(1,7)];
+
+if oldGRAD(1,comp+3*(from-1))>1 % if there are >1 balls of 'comp' in bag 'from'
+    GRAD(2,:) = Gibbs_calc(GRAD(1,1:3),GRAD(1,4:6),comp,from);
+else
+    GRAD(2,:) = zeros(1,7)+1E6;
+end
+
+[lowest_E, best_move] = min(GRAD(:,7));
+GRAD = [GRAD(best_move,:); zeros(6,7)+1E6];
     
 end
+
+function [GRAD,best_move] = make_new_move(oldGRAD)
+
+%% Make new move
+% make new move computes the energy of moving any of the three components
+% to or from each bag, 6 moves in total, returning [GRAD] with the first
+% row as the new best, its previous index as the best move, and large
+% positive numbers to fill the rest.
+% 2: ball 1 from bag 1, 3: ball 1 from bag 2
+% 4: ball 2 from bag 1, 5: ball 2 from bag 2
+% 6: ball 3 from bag 1, 7: ball 3 from bag 2
+GRAD = [oldGRAD(1,:); zeros(1,7)];
+
+for i = 1:3
+    if oldGRAD(1,i)>1 %if there are any balls of i in B1,
+        GRAD(2*i,:) = Gibbs_calc(oldGRAD(1,1:3),oldGRAD(1,4:6),i,1); %find the energy of moving an i from bag 1
+    else
+        GRAD(2*i,:) = zeros(1,7)+1E6;
+    end
+    if GRAD(1,i+3)>1 %if there are any i in B2,
+        GRAD(2*i+1,:) = Gibbs_calc(GRAD(1,1:3),GRAD(1,4:6),i,2); %find energy of moving i from bag
+    else
+        GRAD(2*i+1,:) = zeros(1,7)+1E6;
+    end
+end
+
+[lowest_E, best_move] = min(GRAD(:,7)); %this will output the lowest energy value and its index
+GRAD = [GRAD(best_move,:); zeros(6,7)+1E6];
 
 end
 
@@ -286,7 +326,7 @@ trial = 2;
 pol_vol_fracs = M(trial,3:4);
 solv_frac = 1 - pol_vol_fracs(1) - pol_vol_fracs(2);
 
-solv_line = linspace(0.01,solv_frac,steps)'; %can't start at 0 otherwise Energy will take log(0)
+solv_line = linspace(0.5,solv_frac,steps)'; %can't start at 0 otherwise Energy will take log(0)
 out(:,1) = solv_line;
 
 for i = 1:steps

@@ -1,13 +1,13 @@
 function out = Gibbs_calc(X,moles,DOPs,T)
 
 %% Gibbs Calc
+% 
 
-%now we convert total ball counts to mol fractions, then volume fractions
 VF = mols_to_vols([moles, X],DOPs);
-VF1 = VF(1:3);
-VF2 = VF(4:6);
-M1 = moles.*X;
-M2 = moles.*(1-X);
+VF1 = VF(1:3)
+VF2 = VF(4:6)
+M1 = moles.*X
+M2 = moles.*(1-X)
 
 R = 8.314;
 

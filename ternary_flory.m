@@ -21,7 +21,7 @@ ntests = populate_triangle(vertices); %create n starting solutions evenly distri
 [n,m] = size(ntests); %get n because we're going to create a tie-line for each test point
 %disp(ntests)
 
-balls = 10000; %100000 balls per bag
+balls = 50000; %50000 balls per bag
 test = 1; %count how many test points we've used
 i = 1; %count how many points on the binodal we've marked
 ABC = zeros(1,3); %ABC will store A, B and C as columns in a tests x 3 matrix

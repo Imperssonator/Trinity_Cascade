@@ -33,6 +33,9 @@ DOPs = DOP;
 
 Walk = ntests(start_comp,final_comp,steps,Temps);
 
+out=TL_Energy(Walk,75);
+return
+
 Walk = run_tests(Walk);
 
 plot_process(Walk);
@@ -95,6 +98,26 @@ end
 out = Walk;
 end
 
+function out = TL_Energy(Walk,i)
+%% TL Energy
+% Trying to visualize the energy as a function of degree of phase
+% separation
+
+global DOPs
+T = Walk(i,1,1);
+start_mols = Mtot(Walk,i);
+if all(start_mols)
+    figure
+    hold on
+    for i = 0:0.01:0.1
+        X = [0.5 0.5+i*0.5 0.5-i*0.5];
+        Energy=Gibbs_calc(X,start_mols,DOPs,T);
+        plot(i,Energy,'or')
+    end 
+end
+out = 1;
+end
+
 function out = single_eqm(Walk,i)
 
 %% Single Equilibrium
@@ -107,9 +130,11 @@ T = Walk(i,1,1);
 start_mols = Mtot(Walk,i);
 if all(start_mols)
     f = @(x)Gibbs_calc(x,start_mols,DOPs,T);
-    %[eqm_mfs,Energy] = fmincon(f,[0.5 0.5 0.5],[],[],[],[],[0 0 0],[1 1 1],[],optimoptions('fmincon','Algorithm','interior-point'));
-    [eqm_mfs,Energy] = simulannealbnd(f,[0.5 0.5 0.5],[0 0 0],[1 1 1]);
+    %options = saoptimset('TolFun',1e-8);
+    [eqm_mfs,Energy] = fmincon(f,[0.5 0.5 0.5],[],[],[],[],[0 0 0],[1 1 1],[],optimoptions('fmincon','Algorithm','interior-point'));
+    %[eqm_mfs,Energy] = simulannealbnd(f,[0.5 0.5 0.5],[0 0 0],[1 1 1]);
     Walk(i,1,2) = Energy;
+    %disp(Energy)
     if eqm_mfs ~= [0.5 0.5 0.5] % if the eqm mfs change from start, store the new data in Walk
         Walk(i,5:7,2) = eqm_mfs;
         Walk(i,5:10,1) = mols_to_vols(Walk(i,2:7,2));
@@ -182,8 +207,6 @@ function out = make_mols(Walk)
 % output: the Walk matrix with mole counts calculated from vol. frac's,
 % specifically [0, total moles of each comp., zeros....]
 
-global DOPs
-
 Mtotal = 1; % hard-coded total number of moles in system... shouldn't really matter
 
 for i = 1:length(Walk)
@@ -199,7 +222,7 @@ end
 function mol_fracs = vols_to_mfs(vf)
 
 %% Vols to mfs
-% volume fractions converted to mol fractions
+% volume fractions converted to mol fractions, 1x3 vectors only
 
 global DOPs
 denom = 0; %first calculate the denominator of the formula
@@ -260,6 +283,24 @@ end
 
 VF(3) = 1 - VF(1) - VF(2);
 
+end
+
+
+function out = g12()
+%out = Xij('CHCl3','P3HT',295);
+%out = 0.99; %CHCl3/P3HT
+out = 0.4;
+end
+
+function out = g13()
+%out = Xij('CHCl3','PS',295);
+%out = 0.39; % CHCl3/PS
+out = 0.44;
+end
+
+function out = g23()
+%out = 0.48; %PS/P3HT
+out = 0.004;
 end
 
 function out = Mtot(Walk,i)
