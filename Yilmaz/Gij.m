@@ -1,0 +1,13 @@
+function out = Gij(VF)
+
+%Yilmaz Fig. 1a
+out = [0  -.3 1;...
+       0  0   0.2;...
+       0  0   0];
+
+%Prausnitz Fig 1b
+% out = [0 0.004 0.4;...
+%        0 0     0.44;...
+%        0 0     0];
+
+end

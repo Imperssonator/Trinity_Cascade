@@ -259,18 +259,18 @@ end
 
 function out = g12()
 %out = Xij('CHCl3','P3HT',295);
-out = 0.99;
+out = 0.004;
 %out = 0.1;
 end
 
 function out = g13()
 %out = Xij('CHCl3','PS',295);
-out = 0.39;
+out = .99;
 %out = 0.16;
 end
 
 function out = g23()
-out = 0.29;
+out = 1.54;
 %out = 0.004;
 end
 
@@ -307,7 +307,7 @@ end
 
 function out = generate_molar_volumes()
 % 3 component vector of relative molar volume values
-out = [1 119 1635]; %Mincheol's system
+out = [1 1.6 72.7]; %Mincheol's system
 %out = [1 1000 1000];
 end
 
@@ -321,17 +321,25 @@ out = zeros(steps,3);
 
 %pol_vol_fracs = [.0087 .00952]; % vol. frac. P3HT / PS based on 10 mg/mL each
 %pol_vol_fracs = [.005 .005];
-M = Mincheol();
-trial = 2;
-pol_vol_fracs = M(trial,3:4);
-solv_frac = 1 - pol_vol_fracs(1) - pol_vol_fracs(2);
-
-solv_line = linspace(0.5,solv_frac,steps)'; %can't start at 0 otherwise Energy will take log(0)
-out(:,1) = solv_line;
+% M = Mincheol();
+% trial = 2;
+% pol_vol_fracs = M(trial,3:4);
+% solv_frac = 1 - pol_vol_fracs(1) - pol_vol_fracs(2);
+% 
+% solv_line = linspace(0.5,solv_frac,steps)'; %can't start at 0 otherwise Energy will take log(0)
+% out(:,1) = solv_line;
+% 
+% for i = 1:steps
+%     out(i,3) = (1-out(i,1))/(1+pol_vol_fracs(1)/pol_vol_fracs(2));
+%     out(i,2) = 1 - out(i,1) - out(i,3);
+% end
+VP = 15;
+start_comp = Dalsu(VP,10);
+start(1) = start_comp(2); start(2) = start_comp(3); start(3) = start_comp(1);
+path_vector = [0 0 1] - start;
 
 for i = 1:steps
-    out(i,3) = (1-out(i,1))/(1+pol_vol_fracs(1)/pol_vol_fracs(2));
-    out(i,2) = 1 - out(i,1) - out(i,3);
+    out(i,:) = start+(i-1)/steps*0.5*path_vector;
 end
 
 end 
