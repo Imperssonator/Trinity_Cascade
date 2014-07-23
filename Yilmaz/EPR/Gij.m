@@ -1,6 +1,6 @@
 function out = Gij(VF)
 
-%Yilmaz Fig. 1a
+%Yilmaz Fig. 3c
 out = [0  -.3 1;...
        0  0   0.2;...
        0  0   0];

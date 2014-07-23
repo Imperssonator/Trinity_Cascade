@@ -34,7 +34,7 @@ function [VFeq,PFeq,Eeq,stab] = binodal_epr(DP,VFO,x0,species)
 % to 0 perturbation. Hopefully it will be stable and get you to the global
 % energy minimum.
 
-[PFi,Ei,stabi] = MYGRADSEARCH(x0,VFO,DP,0,.001,1E-6);
+[PFi,Ei,stabi] = MYGRADSEARCH(x0,VFO,DP,0,.001,1E-8);
 if stabi == 0
     disp(VFO)
     disp('was unstable')
@@ -69,7 +69,7 @@ if pert>=maxpert
     return
 end
 
-inistep = 1E-4;
+inistep = 1E-3;
 conTol = 1E-6;
 
 while pert>0
@@ -83,14 +83,11 @@ end
 
 if PFDIFF(PFiter)>difftol && Eiter<Ei
     stab = 1;
-    disp('was metastable!')
     PFeq = PFiter;
     Eeq = Eiter;
 else
     stab = 2;
-    disp('was absolutely stable')
     VFeq = [VFO,VFO];
-    PFeq = x0;
     Eeq = Ei;
 end
 end
