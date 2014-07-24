@@ -4,6 +4,7 @@ VFi = PF2VF(PFi,VFO);
 G1 = Gij(VFi(:,1))+pert;
 G2 = Gij(VFi(:,2))+pert;
 [GRi,DIRi,Ei] = LOCGRAD(PFi,VFO,DP,G1,G2,initstep);
+
 if not(any(GRi<0))
     PF = PFi;
     E = Ei;
@@ -42,10 +43,7 @@ end
 
 while stab == 0
     move = pick_best_move(GR,DIR); % picks the move vector in the direciton of greatest energy decrease
-    if max(abs(move))<step/5 % this condition exists to stop the LOCALGRAD from pushing closer and closer to an edge instead of just going to the next step size down
-        stab = 1;
-        break
-    end
+    %disp(move)
     PF = make_move(PF,move); % applies the move vector to the current phase fraction
     VF = PF2VF(PF,VFO);
     G1 = Gij(VF(:,1))+pert;
@@ -56,7 +54,7 @@ while stab == 0
     end
 end
 
-[PF,E,stab] = downgrad(PF,VFO,DP,pert,E,step/5,conTol);
+[PF,E,stab] = downgrad(PF,VFO,DP,pert,E,step/2,conTol);
 
 end
 

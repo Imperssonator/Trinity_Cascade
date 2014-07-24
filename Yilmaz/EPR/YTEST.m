@@ -17,7 +17,7 @@ DP = [1 4 500]';
 
 for i = 1:steps
     disp(i)
-    [VFeq,Eeq,stab] = EPR(VFOs(:,i),DP,0);
+    [VFeq,PFeq,Eeq,stab] = EPR(VFOs(:,i),DP,0);
     if stab == 0 || stab == 1
         TP = [TP;VFeq'];
     end

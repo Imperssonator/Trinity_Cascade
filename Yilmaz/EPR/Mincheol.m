@@ -1,7 +1,7 @@
 function M = Mincheol()
 
 M = zeros(5,6);
-M(:,1) = [100 50 30 10 5]; %starting weight percent out of total polymer weight
+M(:,1) = [100 50 30 10 5]; %starting weight percent P3HT out of total polymer weight
 M(:,2) = M(:,1)./10; %starting mg/mL P3HT
 M(:,3) = M(:,2)./(1.1*1000); % starting vol frac P3HT
 M(:,4) = (10-M(:,2))./(1000); % starting vol frac PS

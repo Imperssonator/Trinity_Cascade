@@ -1,4 +1,4 @@
-function [VFeq,Eeq,stab] = EPR(VFO,DP,species)
+function [VFeq,PFeq,Eeq,stab] = EPR(VFO,DP,species)
 %% Enthalpic Perturbation/Relaxation
 % Finds global minima in the Gibbs function by strengthening enthalpic
 % contributions until metastable states become unstable, then uses the
@@ -36,7 +36,7 @@ function [VFeq,PFeq,Eeq,stab] = binodal_epr(DP,VFO,x0,species)
 
 [PFi,Ei,stabi] = MYGRADSEARCH(x0,VFO,DP,0,.001,1E-6);
 if stabi == 0
-    disp(VFO)
+    %disp(VFO)
     disp('was unstable')
     stab = 0;
     PFeq = PFi;
@@ -54,28 +54,32 @@ function [PFeq,Eeq,stab] = epr_iter(DP,VFO,x0,Ei)
 %% EPR Iterative Search
 % Implements enthalpic perturbations
 
-pert = 0; maxpert = 2; pertstep = 0.001; stab = 1; difftol = 1E-6; initstep = .001;
+pert = 0; maxpert = 3; pertstep = 0.001; stab = 1; difftol = 1E-6; initstep = .001;
 conTol = 1E-8;
 
+disp('perturbing...')
 while stab > 0 && pert<=maxpert
-    pert = pert+pertstep
+    pert = pert+pertstep;
     [PFiter,Eiter,stab] = MYGRADSEARCH(x0,VFO,DP,pert,initstep,conTol);
 end
 
 if pert>=maxpert
-    VFeq = [VFO,VFO];
     PFeq = zeros(3,2)+0.5;
+    Eeq = Ei;
     stab = 2;
+    disp('was absolutely stable')
     return
 end
 
-inistep = 1E-4;
+initstep = 1E-3;
 conTol = 1E-6;
 
+disp('relaxing...')
 while pert>0
-    pert = pert-pertstep
+    pert = pert-pertstep;
     if pert<=0.01
-        conTol = 1E-8;
+        disp('almost done')
+        conTol = 1E-6;
     end
     x0 = PFiter;
     [PFiter,Eiter,stab] = MYGRADSEARCH(x0,VFO,DP,pert,initstep,conTol);
