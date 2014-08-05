@@ -6,7 +6,7 @@ function out = MTESTS(mix)
 steps = 10;
 VFOs = zeros(3,steps);
 
-M = Mincheol();
+%M = Mincheol();
 
 % startP3HT = M(mix,3);
 % startPS = M(mix,4);
@@ -33,15 +33,17 @@ for i = 1:steps
     disp(i)
     disp(VFOs(:,i))
     [VFeq,PFeq,Eeq,stab] = EPR(VFOs(:,i),DP,0);
+    disp(VFeq)
+    disp(PFeq)
     x = VFOs(3,i);
     if stab == 0
-        plot(x,VFeq(1,1),'or',x,VFeq(1,2),'or',x,VFeq(2,1),'om',x,VFeq(2,2),'om')
+        plot(x,VFeq(1,1),'or',x,VFeq(1,2),'xr',x,VFeq(2,1),'ok',x,VFeq(2,2),'xk','MarkerSize',12)
         TP = [TP,VFeq];
     elseif stab == 1
-        plot(x,VFeq(1,1),'ob',x,VFeq(1,2),'ob',x,VFeq(2,1),'oc',x,VFeq(2,2),'oc')
+        plot(x,VFeq(1,1),'ob',x,VFeq(1,2),'xb',x,VFeq(2,1),'oc',x,VFeq(2,2),'xc','MarkerSize',12)
         TP = [TP,VFeq];
     else
-        plot(x,VFeq(1,1),'og',x,VFeq(2,1),'oy')
+        plot(x,VFeq(1,1),'og',x,VFeq(2,1),'oy','MarkerSize',12)
     end
 end
 

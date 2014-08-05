@@ -41,7 +41,15 @@ if not(any(GR<0))
     stab = 1; % if the gradient is positive in all directions, terminate
 end
 
+% hist_size = 25;
+% move_thresh = 15;
+% MHIST = zeros(3,hist_size);
+% iter = 0;
+
 while stab == 0
+%     iter = iter+1;
+%     if max(sum(MHIST'))>move_thresh
+%         
     move = pick_best_move(GR,DIR); % picks the move vector in the direciton of greatest energy decrease
     %disp(move)
     PF = make_move(PF,move); % applies the move vector to the current phase fraction
@@ -61,7 +69,8 @@ end
 function PF = make_move(PFi,move)
 
 PF(:,1) = PFi(:,1)+move;
-PF(:,2) = PFi(:,2)-move;
+PF(:,2) = 1-PF(:,1);
+%disp(PF)
 
 end
 

@@ -34,7 +34,7 @@ function [VFeq,PFeq,Eeq,stab] = binodal_epr(DP,VFO,x0,species)
 % to 0 perturbation. Hopefully it will be stable and get you to the global
 % energy minimum.
 
-[PFi,Ei,stabi] = MYGRADSEARCH(x0,VFO,DP,0,.001,1E-6);
+[PFi,Ei,stabi] = SUPERGRADSEARCH(x0,VFO,DP,0,.001,1E-6);
 if stabi == 0
     %disp(VFO)
     disp('was unstable')
@@ -55,12 +55,12 @@ function [PFeq,Eeq,stab] = epr_iter(DP,VFO,x0,Ei)
 % Implements enthalpic perturbations
 
 pert = 0; maxpert = 3; pertstep = 0.001; stab = 1; difftol = 1E-6; initstep = .001;
-conTol = 1E-8;
+conTol = 1E-6;
 
 disp('perturbing...')
 while stab > 0 && pert<=maxpert
     pert = pert+pertstep;
-    [PFiter,Eiter,stab] = MYGRADSEARCH(x0,VFO,DP,pert,initstep,conTol);
+    [PFiter,Eiter,stab] = SUPERGRADSEARCH(x0,VFO,DP,pert,initstep,conTol);
 end
 
 if pert>=maxpert
@@ -71,7 +71,7 @@ if pert>=maxpert
     return
 end
 
-initstep = 1E-3;
+initstep = 1E-3; % could change these values for the trip back down
 conTol = 1E-6;
 
 disp('relaxing...')
@@ -82,7 +82,7 @@ while pert>0
         conTol = 1E-6;
     end
     x0 = PFiter;
-    [PFiter,Eiter,stab] = MYGRADSEARCH(x0,VFO,DP,pert,initstep,conTol);
+    [PFiter,Eiter,stab] = SUPERGRADSEARCH(x0,VFO,DP,pert,initstep,conTol);
 end
 
 if PFDIFF(PFiter)>difftol && Eiter<Ei
@@ -94,7 +94,7 @@ else
     stab = 2;
     disp('was absolutely stable')
     VFeq = [VFO,VFO];
-    PFeq = x0;
+    PFeq = zeros(3,2)+0.5;
     Eeq = Ei;
 end
 end
