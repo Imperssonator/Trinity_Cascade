@@ -1,9 +1,8 @@
-function [PF,E,stab] = SUPERGRADSEARCH(PFi,VFO,DP,pert,initstep,conTol,species)
+function [PF,E,stab] = GRADSEARCH2(PFi,VFO,DP,pert,initstep,conTol,species,T)
 
 VFi = PF2VF(PFi,VFO);
-G1 = Gij(species,VFi(:,1))+pert;
-G2 = Gij(species,VFi(:,2))+pert;
-[GRi,DIRi,Ei] = LOCGRAD(PFi,VFO,DP,G1,G2,initstep);
+X = Chi(species,T)+pert;
+[GRi,DIRi,Ei] = LOCDERIV(PFi,VFO,DP,X,initstep);
 
 if not(any(GRi<0))
     PF = PFi;
@@ -33,9 +32,8 @@ if step < conTol % if we're taking small enough steps, abort
 end
 
 VFi = PF2VF(PFi,VFO);
-G1 = Gij(species,VFi(:,1))+pert;
-G2 = Gij(species,VFi(:,2))+pert;
-[GR,DIR,E] = LOCGRAD(PFi,VFO,DP,G1,G2,step); % initialize the gradient with the new step size
+X = Chi(species,T)+pert;
+[GR,DIR,E] = LOCDERIV(PFi,VFO,DP,X,step); % initialize the gradient with the new step size
 PF = PFi;
 if not(any(GR<0))
     stab = 1; % if the gradient is positive in all directions, terminate
@@ -43,7 +41,7 @@ end
 
 hist_size = 40;
 move_thresh = 5;
-MHIST = zeros(3,hist_size);
+MHIST = zeros(2,hist_size);
 EHIST = zeros(1,hist_size);
 EHIST(end) = E;
 iter = 0;

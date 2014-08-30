@@ -33,6 +33,6 @@ end
 
 out = TP;
 figure
-ternplot(TP(1,:),TP(3,:),TP(2,:),'ob')
+ternplot(TP(1,:),TP(3,:),TP(2,:),'ob','MarkerSize',12)
 
 end

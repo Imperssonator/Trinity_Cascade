@@ -23,7 +23,7 @@ T = system.Temp;
 if length(species) == 3
     [VFeq,PFeq,Eeq,stab] = binodal_epr(DP,VFO,x0,species);
 elseif length(species) == 2
-    [VFeq,PFeq,Eeq,stab] = binary_epr(DP,VFO,zeros(2,2)+0.5,species,T);
+    [VFeq,PFeq,Eeq,stab] = binary_epr(DP,VFO,x0,species,T);
 end
 
 % if stab == 1 || stab == 0
@@ -88,7 +88,7 @@ if stabi == 0
     Eeq = Ei;
 else
     disp('running EPR')
-    [PFeq,Eeq,stab] = epr_iter_bin(DP,VFO,x0,Ei,species,T);
+    [PFeq,Eeq,stab] = epr_iter_bin(DP,VFO,x0,Ei,species);
     VFeq = PF2VF(PFeq,VFO);
 end
 
@@ -145,7 +145,7 @@ else
 end
 end
 
-function [PFeq,Eeq,stab] = epr_iter_bin(DP,VFO,x0,Ei,species,T)
+function [PFeq,Eeq,stab] = epr_iter_bin(DP,VFO,x0,Ei,species)
 %% EPR Iterative Search
 % Implements enthalpic perturbations, uses super grad search to find minima
 % until phase separation is predicted, then relaxes back down, re-locating
@@ -157,11 +157,11 @@ conTol = 1E-6;
 disp('perturbing...')
 while stab > 0 && pert<=maxpert
     pert = pert+pertstep;
-    [PFiter,Eiter,stab] = GRADSEARCH2(x0,VFO,DP,pert,initstep,conTol,species,T);
+    [PFiter,Eiter,stab] = SUPERGRADSEARCH(x0,VFO,DP,pert,initstep,conTol,species);
 end
 
 if pert>=maxpert
-    PFeq = zeros(2,2)+0.5;
+    PFeq = zeros(3,2)+0.5;
     Eeq = Ei;
     stab = 2;
     disp('was absolutely stable')
@@ -179,10 +179,10 @@ while pert>0
         conTol = 1E-6;
     end
     x0 = PFiter;
-    [PFiter,Eiter,stab] = GRADSEARCH2(x0,VFO,DP,pert,initstep,conTol,species,T);
+    [PFiter,Eiter,stab] = SUPERGRADSEARCH(x0,VFO,DP,pert,initstep,conTol,species);
 end
 
-if abs(PFiter(1,1)-PFiter(2,1))^2>difftol && Eiter<Ei
+if PFDIFF(PFiter)>difftol && Eiter<Ei
     stab = 1;
     disp('was metastable!')
     PFeq = PFiter;
@@ -191,7 +191,7 @@ else
     stab = 2;
     disp('was absolutely stable')
     VFeq = [VFO,VFO];
-    PFeq = zeros(2,2)+0.5;
+    PFeq = zeros(3,2)+0.5;
     Eeq = Ei;
 end
 end
