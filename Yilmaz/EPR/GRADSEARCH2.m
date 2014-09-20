@@ -73,7 +73,9 @@ while stab == 0
     MHIST = [MHIST(:,2:hist_size),move];
     EHIST = [EHIST(2:hist_size),E+dE];
     [GR,DIR,E] = LOCDERIV(PF,VFO,DP,X,step); % checks the gradient at the new point
+    %disp(GR)
     if not(any(GR<0))
+        %disp(move)
         stab = 1;
     end
 end

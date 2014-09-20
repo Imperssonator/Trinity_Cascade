@@ -25,6 +25,7 @@ function [PF,E,stab] = downgrad(PFi,VFO,DP,pert,Ei,step,conTol,species)
 % PF2
 
 stab = 0; % if this has been called, it is unstable
+disp(step)
 if step < conTol % if we're taking small enough steps, abort
     PF = PFi;
     E = Ei;
@@ -69,6 +70,7 @@ while stab == 0
         [move,dE] = pick_best_move(GR,DIR); % picks the move vector in the direciton of greatest energy decrease
     end
     %disp(move)
+    %disp(dE)
     PF = make_move(PF,move); % applies the move vector to the current phase fraction
     VF = PF2VF(PF,VFO);
     G1 = Gij(species,VF(:,1))+pert;

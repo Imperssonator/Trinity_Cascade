@@ -6,6 +6,8 @@ system1 = struct();
 system1.species = {'CHCl3'; 'hexane'; 'P3HT'}; %chemical species in system
 system1.DP = [1; 1; 236]; %relative molar volumes of each species... indicating P3HT has a DoP of 236
 system1.VFO = [0; 0; 0;]; %We will change this on every iteration of the for loop coming up
+system1.x0 = zeros(3,2)+0.5;
+system1.Temp = 0;
 points = 50; % # random points to test per phase diagram
 save('input_struct.mat','system1')
 

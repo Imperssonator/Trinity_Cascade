@@ -6,7 +6,8 @@ system = struct();
 species = {'P3HT'; 'CHCl3'}; %chemical species in system
 DP = [236; 1]; %relative molar volumes of each species... indicating P3HT has a DoP of 236
 VFO = [0.01; 0.99]; %We will change this on every iteration of the for loop coming up
-points = 100; % # number of temperatures to run
+x0 = zeros(2,2)+0.5;
+points = 150; % # number of temperatures to run
 % save('gang_input.mat','system1')
 
 %% Pick system volume fractions to test
@@ -30,7 +31,11 @@ Temps = linspace(T_start,T_end,points); %this will contain all the random overal
 
 TP = []; %this is the "out". It will contain 3x1 vectors that represent temperatures and eqm. volume fractions that fall along the binodal curve. Each "VFO" could produce two vectors in TP
 
-for i = 1:points
+START = 26;
+system(START).x0 = x0; % equilibrate the first point from half and half phase split
+END = 27;
+
+for i = START:END
     disp('_______________')
     disp(i)
     disp(Temps(i))
@@ -40,22 +45,28 @@ for i = 1:points
     system(i).VFO = VFO;
     [VFeq,PFeq,Eeq,stab] = EPR(system(i));
     disp(VFeq)
-    %disp(PFeq)
+    disp(PFeq)
     if stab == 0
         %plot(x,VFeq(1,1),'or',x,VFeq(1,2),'xr',x,VFeq(2,1),'ok',x,VFeq(2,2),'xk','MarkerSize',12)
         TP = [TP,[Temps(i),Temps(i); VFeq]];
+        system(i+1).x0 = PFeq; %use the currently equilibrated phase fractions as initial guess for next temperature
+%         system(i+1).x0 = zeros(2)+0.5;
     elseif stab == 1
         %plot(x,VFeq(1,1),'ob',x,VFeq(1,2),'xb',x,VFeq(2,1),'oc',x,VFeq(2,2),'xc','MarkerSize',12)
         TP = [TP,[Temps(i),Temps(i); VFeq]];
+        system(i+1).x0 = PFeq; %use the currently equilibrated phase fractions as initial guess for next temperature
+%         system(i+1).x0 = zeros(2)+0.5;
     else
+        break
         %plot(x,VFeq(1,1),'og',x,VFeq(2,1),'oy','MarkerSize',12)
+        system(i+1).x0 = zeros(2,2)+0.5;
     end
 end
 
 out = TP;
 %save('out.mat','out')
 figure
-plot(TP(2,:),TP(1,:),'ob')
+plot(TP(2,:),TP(1,:),'ob','MarkerSize',8)
 xlabel('volume fraction P3HT')
 ylabel('Temperature (K)')
 %vertexlabel('hexane','CHCl3','P3HT')
