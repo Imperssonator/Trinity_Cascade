@@ -13,13 +13,14 @@ function [GRAD,DIR,E0] = LOCDERIV(PF,VFO,DP,X,ds)
 % move on
 
 DIR = LSP(PF,ds);
-GRAD = zeros(4,1);
+possible_moves = 6;
+GRAD = zeros(possible_moves,1);
 
 E0 = GIBBS2bin(PF,VFO,DP,X);
 %disp(E0)
-for i = 1:4
+for i = 1:possible_moves
     if any(DIR(:,i))
-        GRAD(i) = GIBBS2bin([PF(:,1)+DIR(:,i),PF(:,2)-DIR(:,i)],VFO,DP,X)-E0;
+        GRAD(i) = GIBBS2bin([PF(:,1)+DIR(:,i),1-(PF(:,1)+DIR(:,i))],VFO,DP,X)-E0;
     else
         GRAD(i) = 1000;
     end
@@ -31,8 +32,8 @@ function DIR = LSP(PF,ds)
 %% Lumpy Space Princess
 % Cuts out the moves that would send you off the fuckin' MAP
 
-DIR = [1 0 1 -1;...
-       0 1 -1 1].*ds;
+DIR = [1 0 -1 0 1 -1;...
+       0 1 0 -1 -1 1].*ds;
 
 if not(any((1-PF(:,1))<ds)) && not(any(PF(:,1)<ds))
     return

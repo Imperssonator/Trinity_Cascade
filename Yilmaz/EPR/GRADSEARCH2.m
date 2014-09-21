@@ -2,12 +2,13 @@ function [PF,E,stab] = GRADSEARCH2(PFi,VFO,DP,pert,initstep,conTol,species,T)
 
 VFi = PF2VF(PFi,VFO);
 X = Chi(species,T)+pert;
-[GRi,DIRi,Ei] = LOCDERIV(PFi,VFO,DP,X,initstep);
+[GRi,DIRi,Ei] = LOCDERIV(PFi,VFO,DP,X,1E-6);
+%disp(GRi)
 
-if not(any(GRi<0))
+if not(any(GRi<0)) % if no initial directions decrease energy
     PF = PFi;
     E = Ei;
-    stab = 1;
+    stab = 1; % give up the gradient search
 else
     [PF,E] = downgrad(PFi,VFO,DP,pert,Ei,initstep,conTol,species,T);
     stab = 0;
@@ -66,7 +67,10 @@ while stab == 0
     if made_move == 0
         [move,dE] = pick_best_move(GR,DIR); % picks the move vector in the direciton of greatest energy decrease
     end
-    %disp(move)
+%     disp('_________')
+%     disp(PF)
+%     disp(move)
+%     disp(dE)
     PF = make_move(PF,move); % applies the move vector to the current phase fraction
     VF = PF2VF(PF,VFO);
     X = Chi(species,T)+pert;

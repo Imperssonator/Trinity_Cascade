@@ -5,7 +5,7 @@ function out = GANGRUNS()
 system = struct();
 species = {'P3HT'; 'CHCl3'}; %chemical species in system
 DP = [236; 1]; %relative molar volumes of each species... indicating P3HT has a DoP of 236
-VFO = [0.01; 0.99]; %We will change this on every iteration of the for loop coming up
+VFO = [0.005; 0.995]; %We will change this on every iteration of the for loop coming up
 x0 = zeros(2,2)+0.5;
 points = 150; % # number of temperatures to run
 % save('gang_input.mat','system1')
@@ -31,14 +31,16 @@ Temps = linspace(T_start,T_end,points); %this will contain all the random overal
 
 TP = []; %this is the "out". It will contain 3x1 vectors that represent temperatures and eqm. volume fractions that fall along the binodal curve. Each "VFO" could produce two vectors in TP
 
-START = 26;
+START = 1;
 system(START).x0 = x0; % equilibrate the first point from half and half phase split
-END = 27;
+END = points;
 
 for i = START:END
     disp('_______________')
     disp(i)
     disp(Temps(i))
+    disp(VFO)
+    disp(system(i).x0)
     system(i).Temp = Temps(i);
     system(i).species = species;
     system(i).DP = DP;

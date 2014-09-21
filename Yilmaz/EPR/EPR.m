@@ -68,7 +68,8 @@ end
 
 function [VFeq,PFeq,Eeq,stab] = binary_epr(DP,VFO,x0,species,T)
 %% Binodal perturbation relaxation
-% Start by determining the energy of a single phase
+% Start by trying a gradient search on the system with a 50/50 split and small step size. If
+% successful, use the results.
 % Then, determine stability by running fmincon.
 % If unstable, binodal should be determined instantly... heh heh heh...
 % If stable, increase the pert and try again, until you reach the pert
@@ -78,19 +79,17 @@ function [VFeq,PFeq,Eeq,stab] = binary_epr(DP,VFO,x0,species,T)
 % to 0 perturbation. Hopefully it will be stable and get you to the global
 % energy minimum.
 
-[PFi,Ei,stabi] = GRADSEARCH2(zeros(2,2)+0.5,VFO,DP,0,.001,1E-10,species,T); %do the first grad search with 0.5's as x0 otherwise it won't predict metastability ever
-if stabi == 0
-    %disp(VFO)
-    disp('was unstable')
-    stab = 0;
-    [PFeq,Eeq,stab] = GRADSEARCH2(x0,VFO,DP,0,.001,1E-10,species,T); %do the first grad search with 0.5's as x0 otherwise it won't predict metastability ever
-    VFeq = PF2VF(PFeq,VFO);
-%     PFeq = PFi;
-%     VFeq = PF2VF(PFi,VFO);
-%     Eeq = Ei;
-else
+[GRi,DIRi,Ei] = LOCDERIV(zeros(2)+0.5,VFO,DP,Chi(species,T),1E-4); %check the gradient with a 50/50 split
+%disp(GRi)
+
+if not(any(GRi<0)) % if no initial directions decrease energy, run epr
     disp('running EPR')
     [PFeq,Eeq,stab] = epr_iter_bin(DP,VFO,x0,Ei,species,T); %but if you must do an EPR, use the previous point's PFeq as x0 (fed in the system struct)
+    VFeq = PF2VF(PFeq,VFO);
+else % otherwise just do a gradient search
+    disp('was unstable')
+    stab = 0;
+    [PFeq,Eeq,stab] = GRADSEARCH2(x0,VFO,DP,0,.001,1E-8,species,T);
     VFeq = PF2VF(PFeq,VFO);
 end
 
@@ -154,7 +153,7 @@ function [PFeq,Eeq,stab] = epr_iter_bin(DP,VFO,x0,Ei,species,T)
 % minima on the way
 
 pert = 0; maxpert = 3; pertstep = 0.001; stab = 1; difftol = 1E-6; initstep = .001;
-conTol = 1E-10;
+conTol = 1E-8;
 disp('perturbing...')
 while stab > 0 && pert<=maxpert
     pert = pert+pertstep;
@@ -170,15 +169,15 @@ if pert>=maxpert
 end
 
 initstep = 1E-6; % could change these values for the trip back down
-conTol = 1E-10;
+conTol = 1E-8;
 
 disp('relaxing...')
 while pert>0
     pert = pert-pertstep;
-    if pert<=0.01
-        %disp('almost done')
-        conTol = 1E-10;
-    end
+%     if pert<=0.01
+%         %disp('almost done')
+%         conTol = 1E-6;
+%     end
     x0 = PFiter;
     [PFiter,Eiter,stab] = GRADSEARCH2(x0,VFO,DP,pert,initstep,conTol,species,T);
 end
