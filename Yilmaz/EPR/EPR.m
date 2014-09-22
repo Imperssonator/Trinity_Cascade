@@ -24,13 +24,12 @@ if length(species) == 3
     [VFeq,PFeq,Eeq,stab] = binodal_epr(DP,VFO,x0,species);
 elseif length(species) == 2
     [VFeq,PFeq,Eeq,stab] = binary_epr(DP,VFO,x0,species,T);
+    if stab == 1 || stab == 0
+        VFspin = BINSPIN(DP,VFO,VFeq,species,T);
+    else
+        VFspin = zeros(2,2);
+    end
 end
-
-% if stab == 1 || stab == 0
-%     VFspin = spinodal(DP,VFO,PFeq,species);
-% else
-%     VFspin = zeros(3,2);
-% end
 
 % VFcrit = criticalpt(DP);
 % disp('critical point:')

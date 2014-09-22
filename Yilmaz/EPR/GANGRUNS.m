@@ -5,9 +5,9 @@ function out = GANGRUNS()
 system = struct();
 species = {'P3HT'; 'CHCl3'}; %chemical species in system
 DP = [236; 1]; %relative molar volumes of each species... indicating P3HT has a DoP of 236
-VFO = [0.005; 0.995]; %We will change this on every iteration of the for loop coming up
+VFO = [0.01; 0.99]; %We will change this on every iteration of the for loop coming up
 x0 = zeros(2,2)+0.5;
-points = 150; % # number of temperatures to run
+points = 300; % # number of temperatures to run
 % save('gang_input.mat','system1')
 
 %% Pick system volume fractions to test
@@ -30,7 +30,7 @@ Temps = linspace(T_start,T_end,points); %this will contain all the random overal
 % volume fractions, if not, don't store.
 
 TP = []; %this is the "out". It will contain 3x1 vectors that represent temperatures and eqm. volume fractions that fall along the binodal curve. Each "VFO" could produce two vectors in TP
-
+TPspin = []; %this is the other out that has the spinodal points
 START = 1;
 system(START).x0 = x0; % equilibrate the first point from half and half phase split
 END = points;
@@ -45,7 +45,7 @@ for i = START:END
     system(i).species = species;
     system(i).DP = DP;
     system(i).VFO = VFO;
-    [VFeq,PFeq,Eeq,stab] = EPR(system(i));
+    [VFeq,PFeq,Eeq,stab,VFspin] = EPR(system(i));
     disp(VFeq)
     disp(PFeq)
     if stab == 0
@@ -63,12 +63,15 @@ for i = START:END
         %plot(x,VFeq(1,1),'og',x,VFeq(2,1),'oy','MarkerSize',12)
         system(i+1).x0 = zeros(2,2)+0.5;
     end
+    TPspin = [TPspin,[Temps(i),Temps(i);VFspin]];
 end
 
 out = TP;
 %save('out.mat','out')
 figure
-plot(TP(2,:),TP(1,:),'ob','MarkerSize',8)
+hold on
+plot(TP(2,:),TP(1,:),'xb','MarkerSize',8)
+plot(TPspin(2,:),TPspin(1,:),'xg','MarkerSize',6)
 xlabel('volume fraction P3HT')
 ylabel('Temperature (K)')
 %vertexlabel('hexane','CHCl3','P3HT')
